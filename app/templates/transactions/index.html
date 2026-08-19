@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions{% endblock %}
+{% block page_title %}Transactions{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/transactions.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- Filter & Search Toolbar -->
+<div class="card filter-card">
+  <form method="GET" action="{{ url_for('transactions.index') }}" id="filterForm">
+    <div class="filter-grid">
+      
+      <!-- Search Input -->
+      <div class="form-group" style="margin-bottom: 0;">
+        <input type="text" class="form-control" name="q" value="{{ search_query }}" placeholder="Search description, category, notes..." autofocus>
+      </div>
+
+      <!-- Type Filter -->
+      <div class="form-group" style="margin-bottom: 0;">
+        <select class="form-select" name="type" onchange="this.form.submit()">
+          <option value="" {% if not trans_type %}selected{% endif %}>All Types</option>
+          <option value="expense" {% if trans_type == 'expense' %}selected{% endif %}>Expenses Only</option>
+          <option value="income" {% if trans_type == 'income' %}selected{% endif %}>Income Only</option>
+        </select>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="form-group" style="margin-bottom: 0;">
+        <select class="form-select" name="category" onchange="this.form.submit()">
+          <option value="" {% if not category or category == 'All Categories' %}selected{% endif %}>All Categories</option>
+          <optgroup label="Expenses">
+            {% for cat in expense_categories %}
+              <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </optgroup>
+          <optgroup label="Income">
+            {% for cat in income_categories %}
+              <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- Timeframe Filter -->
+      <div class="form-group" style="margin-bottom: 0;">
+        <select class="form-select" name="timeframe" id="timeframeSelect" onchange="if(this.value!=='custom') this.form.submit()">
+          <option value="all" {% if timeframe == 'all' %}selected{% endif %}>All Time</option>
+          <option value="today" {% if timeframe == 'today' %}selected{% endif %}>Today</option>
+          <option value="this_week" {% if timeframe == 'this_week' %}selected{% endif %}>This Week</option>
+          <option value="this_month" {% if timeframe == 'this_month' %}selected{% endif %}>This Month</option>
+          <option value="this_year" {% if timeframe == 'this_year' %}selected{% endif %}>This Year</option>
+          <option value="custom" {% if timeframe == 'custom' %}selected{% endif %}>Custom Range...</option>
+        </select>
+      </div>
+
+      <!-- Actions -->
+      <div class="filter-actions">
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i data-lucide="filter"></i>
+          <span>Filter</span>
+        </button>
+        <a href="{{ url_for('transactions.index') }}" class="btn btn-secondary btn-sm" title="Reset Filters">
+          <i data-lucide="rotate-ccw"></i>
+        </a>
+        <a href="{{ url_for('transactions.export_csv', q=search_query, type=trans_type, category=category) }}" class="btn btn-secondary btn-sm" title="Export to CSV">
+          <i data-lucide="download"></i>
+          <span>Export</span>
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Custom Date Range Row (Revealed when timeframe=custom) -->
+    <div class="custom-date-row {% if timeframe != 'custom' %}hidden{% endif %}" id="customDateRow">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <label class="form-label" style="margin-bottom: 0; white-space: nowrap;">From:</label>
+        <input type="date" class="form-control" name="start_date" value="{{ start_date_str }}">
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <label class="form-label" style="margin-bottom: 0; white-space: nowrap;">To:</label>
+        <input type="date" class="form-control" name="end_date" value="{{ end_date_str }}">
+      </div>
+      <button type="submit" class="btn btn-sm btn-primary">Apply Dates</button>
+    </div>
+  </form>
+</div>
+
+<!-- Filter Summary Strip -->
+<div class="filter-summary">
+  <div>
+    <strong>{{ total_matching_count }}</strong> transactions found
+    {% if search_query %} matching "<em>{{ search_query }}</em>"{% endif %}
+  </div>
+  <div class="filter-summary-stats">
+    <div class="filter-stat-item">
+      <span class="label">Income:</span>
+      <span class="val income">+{{ current_user.currency_symbol }}{{ "{:,.2f}".format(filtered_income) }}</span>
+    </div>
+    <div class="filter-stat-item">
+      <span class="label">Expenses:</span>
+      <span class="val expense">-{{ current_user.currency_symbol }}{{ "{:,.2f}".format(filtered_expense) }}</span>
+    </div>
+    <div class="filter-stat-item">
+      <span class="label">Net:</span>
+      <span class="val net">{{ current_user.currency_symbol }}{{ "{:,.2f}".format(filtered_net) }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Transactions Table Container -->
+<div class="table-container">
+  {% if transactions %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Category</th>
+          <th>Payment Method</th>
+          <th>Type</th>
+          <th style="text-align: right;">Amount</th>
+          <th style="text-align: center; width: 100px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in transactions %}
+          <tr>
+            <td style="white-space: nowrap; color: var(--text-muted); font-size: 0.825rem;">
+              {{ t.date.strftime('%b %d, %Y') }}
+            </td>
+            <td>
+              <div class="table-desc">{{ t.description }}</div>
+              {% if t.notes %}
+                <div class="table-notes">{{ t.notes }}</div>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge badge-category">{{ t.category }}</span>
+            </td>
+            <td>
+              <span class="payment-method-tag">
+                <i data-lucide="credit-card" style="width: 12px; height: 12px;"></i>
+                {{ t.payment_method }}
+              </span>
+            </td>
+            <td>
+              <span class="badge badge-{{ t.type }}">{{ t.type }}</span>
+            </td>
+            <td style="text-align: right; font-weight: 700;">
+              <span class="transaction-amount {{ t.type }}">
+                {% if t.type == 'income' %}+{% else %}-{% endif %}{{ current_user.currency_symbol }}{{ "{:,.2f}".format(t.amount) }}
+              </span>
+            </td>
+            <td style="text-align: center;">
+              <div class="action-buttons" style="justify-content: center;">
+                <a href="{{ url_for('transactions.edit', trans_id=t.id) }}" class="btn-action" title="Edit Transaction">
+                  <i data-lucide="edit-2" style="width: 14px; height: 14px;"></i>
+                </a>
+                <form class="delete-transaction-form" method="POST" action="{{ url_for('transactions.delete', trans_id=t.id) }}" style="display: inline;">
+                  <button type="submit" class="btn-action delete" title="Delete Transaction">
+                    <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Pagination Bar -->
+    {% if pagination.pages > 1 %}
+      <div class="pagination-container">
+        <div class="pagination-info">
+          Page {{ pagination.page }} of {{ pagination.pages }}
+        </div>
+        <div class="pagination-nav">
+          <a href="{{ url_for('transactions.index', page=pagination.prev_num, q=search_query, type=trans_type, category=category, timeframe=timeframe, start_date=start_date_str, end_date=end_date_str, sort=sort_by) if pagination.has_prev else '#' }}"
+             class="page-link {% if not pagination.has_prev %}disabled{% endif %}">
+            &laquo;
+          </a>
+
+          {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+              <a href="{{ url_for('transactions.index', page=p, q=search_query, type=trans_type, category=category, timeframe=timeframe, start_date=start_date_str, end_date=end_date_str, sort=sort_by) }}"
+                 class="page-link {% if p == pagination.page %}active{% endif %}">
+                {{ p }}
+              </a>
+            {% else %}
+              <span class="page-link disabled">...</span>
+            {% endif %}
+          {% endfor %}
+
+          <a href="{{ url_for('transactions.index', page=pagination.next_num, q=search_query, type=trans_type, category=category, timeframe=timeframe, start_date=start_date_str, end_date=end_date_str, sort=sort_by) if pagination.has_next else '#' }}"
+             class="page-link {% if not pagination.has_next %}disabled{% endif %}">
+            &raquo;
+          </a>
+        </div>
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div class="empty-state">
+      <i data-lucide="inbox" class="empty-icon"></i>
+      <div class="empty-title">No transactions match your filter</div>
+      <p class="empty-text">Try modifying your search term, category, or date range.</p>
+      <a href="{{ url_for('transactions.index') }}" class="btn btn-secondary btn-sm">Clear All Filters</a>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/transactions.js') }}"></script>
+{% endblock %}

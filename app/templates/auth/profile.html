@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Account Settings{% endblock %}
+{% block page_title %}Account Settings{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.75rem;">
+  
+  <!-- Profile & Preferences Card -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">
+          <i data-lucide="user"></i>
+          <span>Profile & Preferences</span>
+        </h2>
+        <p class="card-subtitle">Manage your personal information and default display currency</p>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.profile') }}">
+      <input type="hidden" name="action" value="update_profile">
+
+      <div class="form-group">
+        <label class="form-label" for="profileUsername">Username</label>
+        <input type="text" class="form-control" id="profileUsername" name="username" value="{{ current_user.username }}" required minlength="3">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="profileEmail">Email Address</label>
+        <input type="email" class="form-control" id="profileEmail" name="email" value="{{ current_user.email }}" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="profileCurrency">Default Currency</label>
+        <select class="form-select" id="profileCurrency" name="currency">
+          {% for code, sym in supported_currencies.items() %}
+            <option value="{{ code }}" {% if current_user.currency == code %}selected{% endif %}>
+              {{ code }} ({{ sym }})
+            </option>
+          {% endfor %}
+        </select>
+        <small style="color: var(--text-muted); font-size: 0.775rem; margin-top: 0.25rem; display: block;">
+          This currency symbol will be used across your dashboard, budgets, and exports.
+        </small>
+      </div>
+
+      <!-- Auto Convert Checkbox -->
+      <div class="form-group" style="background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.85rem 1rem;">
+        <label class="custom-checkbox" style="font-size: 0.875rem; font-weight: 600; color: var(--text-main);">
+          <input type="checkbox" name="convert_amounts" value="1" checked>
+          <span>Automatically convert existing transaction and budget amounts</span>
+        </label>
+        <p style="font-size: 0.775rem; color: var(--text-muted); margin-top: 0.35rem; margin-left: 1.5rem;">
+          When checked, all existing income, expenses, and budget numbers will be recalculated using active market exchange rates (e.g. converting USD $100 &rarr; INR ₹8,350).
+        </p>
+      </div>
+
+      <button type="submit" class="btn btn-primary">
+        <i data-lucide="save"></i>
+        <span>Save Changes</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- Live Currency Converter Calculator Card -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">
+          <i data-lucide="repeat"></i>
+          <span>Live Currency Converter</span>
+        </h2>
+        <p class="card-subtitle">Convert amounts between Rupees (₹), Dollars ($), Euros (€), and more</p>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 0.85rem; align-items: flex-end;">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label">Amount</label>
+        <input type="number" id="calcAmount" class="form-control" value="1000" min="0" step="0.01">
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label">From</label>
+        <select id="calcFrom" class="form-select">
+          {% for code, sym in supported_currencies.items() %}
+            <option value="{{ code }}" {% if code == 'USD' %}selected{% endif %}>{{ code }} ({{ sym }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label">To</label>
+        <select id="calcTo" class="form-select">
+          {% for code, sym in supported_currencies.items() %}
+            <option value="{{ code }}" {% if code == 'INR' %}selected{% endif %}>{{ code }} ({{ sym }})</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div id="calcResultBox" style="margin-top: 1.25rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15)); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-md); padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <div style="font-size: 0.775rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Converted Value</div>
+        <div id="calcResultValue" style="font-size: 1.6rem; font-weight: 800; color: #a5b4fc; margin-top: 0.15rem;">₹83,500.00</div>
+      </div>
+      <div style="text-align: right;">
+        <div style="font-size: 0.775rem; color: var(--text-muted);">Exchange Rate</div>
+        <div id="calcRateValue" style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);">1 USD = 83.50 INR</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Security Card -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">
+          <i data-lucide="lock"></i>
+          <span>Security & Password</span>
+        </h2>
+        <p class="card-subtitle">Ensure your account is using a secure password</p>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.profile') }}">
+      <input type="hidden" name="action" value="change_password">
+
+      <div class="form-group">
+        <label class="form-label" for="oldPassword">Current Password</label>
+        <input type="password" class="form-control" id="oldPassword" name="old_password" required placeholder="••••••••">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <div class="form-group">
+          <label class="form-label" for="newPassword">New Password</label>
+          <input type="password" class="form-control" id="newPassword" name="new_password" required minlength="6" placeholder="••••••••">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="confirmNewPassword">Confirm New Password</label>
+          <input type="password" class="form-control" id="confirmNewPassword" name="confirm_password" required minlength="6" placeholder="••••••••">
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-secondary">
+        <i data-lucide="key"></i>
+        <span>Update Password</span>
+      </button>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

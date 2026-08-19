@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Dashboard{% endblock %} - Smart Expense Tracker</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Core & Page CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  {% block extra_css %}{% endblock %}
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/logo.svg') }}">
+</head>
+<body>
+
+  <!-- Flash Messages / Toasts -->
+  <div class="toast-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="toast toast-{{ category }}">
+            <span>{{ message }}</span>
+            <button class="toast-close" type="button">&times;</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" class="sidebar-logo">
+        <span class="brand-title">SmartTracker</span>
+        <span class="brand-badge">Pro</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <span class="nav-section-title">Menu</span>
+        <a href="{{ url_for('dashboard.index') }}" class="nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="{{ url_for('transactions.index') }}" class="nav-item {% if request.endpoint in ['transactions.index', 'transactions.add', 'transactions.edit'] %}active{% endif %}">
+          <i data-lucide="receipt"></i>
+          <span>Transactions</span>
+        </a>
+        <a href="{{ url_for('budgets.index') }}" class="nav-item {% if request.endpoint == 'budgets.index' %}active{% endif %}">
+          <i data-lucide="pie-chart"></i>
+          <span>Budgets</span>
+        </a>
+        <a href="{{ url_for('analytics.index') }}" class="nav-item {% if request.endpoint == 'analytics.index' %}active{% endif %}">
+          <i data-lucide="bar-chart-3"></i>
+          <span>Analytics</span>
+        </a>
+
+        <span class="nav-section-title" style="margin-top: 1rem;">Account</span>
+        <a href="{{ url_for('auth.profile') }}" class="nav-item {% if request.endpoint == 'auth.profile' %}active{% endif %}">
+          <i data-lucide="user-cog"></i>
+          <span>Settings</span>
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="nav-item" style="color: #fb7185;">
+          <i data-lucide="log-out"></i>
+          <span>Logout</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile-widget">
+          <div class="user-avatar">
+            {{ current_user.username[0]|upper if current_user.is_authenticated else 'U' }}
+          </div>
+          <div class="user-info">
+            <div class="user-name">{{ current_user.username if current_user.is_authenticated else 'Guest' }}</div>
+            <div class="user-currency">{{ current_user.currency if current_user.is_authenticated else 'USD' }} ({{ current_user.currency_symbol if current_user.is_authenticated else '$' }})</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="app-main">
+      
+      <!-- Topbar Header -->
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">
+            <i data-lucide="menu"></i>
+          </button>
+          <div>
+            <div class="page-greeting">{% block page_title %}Dashboard{% endblock %}</div>
+            <div class="page-date">{{ now.strftime('%A, %B %d, %Y') }}</div>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          {% if current_user.is_authenticated %}
+            <button class="btn btn-primary" data-modal-target="quickAddModal">
+              <i data-lucide="plus-circle"></i>
+              <span>Add Transaction</span>
+            </button>
+          {% endif %}
+        </div>
+      </header>
+
+      <!-- Dynamic Page Content -->
+      <main class="page-content">
+        {% block content %}{% endblock %}
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Quick Add Transaction Modal (Globally Accessible) -->
+  {% if current_user.is_authenticated %}
+  <div class="modal-backdrop" id="quickAddModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">New Transaction</div>
+        <button class="modal-close" data-modal-close>&times;</button>
+      </div>
+      <form id="quickAddTransactionForm" method="POST" action="{{ url_for('transactions.add') }}">
+        <div class="modal-body">
+          
+          <!-- Income vs Expense Type Toggle -->
+          <div class="type-toggle-group">
+            <label class="type-radio-label expense active">
+              <input type="radio" name="type" value="expense" checked>
+              <i data-lucide="arrow-down-right" style="color:#f43f5e;"></i>
+              <span>Expense</span>
+            </label>
+            <label class="type-radio-label income">
+              <input type="radio" name="type" value="income">
+              <i data-lucide="arrow-up-right" style="color:#10b981;"></i>
+              <span>Income</span>
+            </label>
+          </div>
+
+          <!-- Amount -->
+          <div class="form-group">
+            <label class="form-label" for="quickAmount">Amount ({{ current_user.currency_symbol }})</label>
+            <input type="number" step="0.01" min="0.01" class="form-control" id="quickAmount" name="amount" placeholder="0.00" required>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label class="form-label" for="quickCategory">Category</label>
+            <select class="form-select" id="quickCategory" name="category" required>
+              <option value="" disabled selected>Select category...</option>
+              {% for cat in expense_categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label class="form-label" for="quickDescription">Description</label>
+            <input type="text" class="form-control" id="quickDescription" name="description" placeholder="e.g. Grocery shopping, Starbucks, Salary" required maxlength="200">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <!-- Date -->
+            <div class="form-group">
+              <label class="form-label" for="quickDate">Date</label>
+              <input type="date" class="form-control" id="quickDate" name="date" value="{{ now.strftime('%Y-%m-%d') }}" required>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="form-group">
+              <label class="form-label" for="quickPaymentMethod">Payment Method</label>
+              <select class="form-select" id="quickPaymentMethod" name="payment_method">
+                {% for pm in payment_methods %}
+                  <option value="{{ pm }}">{{ pm }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <!-- Notes (Optional) -->
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="quickNotes">Notes (Optional)</label>
+            <textarea class="form-control" id="quickNotes" name="notes" placeholder="Additional details..." rows="2"></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Transaction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Chart.js & Main Script -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

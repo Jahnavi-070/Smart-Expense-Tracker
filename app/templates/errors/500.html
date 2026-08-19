@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>500 - Server Error</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/logo.svg') }}">
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card" style="text-align: center;">
+      <div style="font-size: 4rem; font-weight: 800; color: #f43f5e; line-height: 1; margin-bottom: 1rem;">500</div>
+      <h1 class="auth-title" style="margin-bottom: 0.5rem;">Internal Server Error</h1>
+      <p class="auth-subtitle" style="margin-bottom: 1.5rem;">Something went wrong on our end while processing your request. Please try again.</p>
+      
+      <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary" style="display: inline-flex; width: 100%;">
+        <i data-lucide="refresh-cw"></i>
+        <span>Return to Dashboard</span>
+      </a>
+    </div>
+  </div>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

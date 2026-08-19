@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Add Transaction{% endblock %}
+{% block page_title %}Add New Transaction{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/transactions.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">
+          <i data-lucide="plus-circle"></i>
+          <span>Record New Transaction</span>
+        </h2>
+        <p class="card-subtitle">Enter details for your income or expense</p>
+      </div>
+      <a href="{{ url_for('transactions.index') }}" class="btn btn-sm btn-secondary">Back to List</a>
+    </div>
+
+    <form method="POST" action="{{ url_for('transactions.add') }}">
+      
+      <!-- Type Toggle -->
+      <div class="type-toggle-group">
+        <label class="type-radio-label expense {% if not form_data or form_data.get('type') != 'income' %}active{% endif %}">
+          <input type="radio" name="type" value="expense" {% if not form_data or form_data.get('type') != 'income' %}checked{% endif %}>
+          <i data-lucide="arrow-down-right" style="color: #f43f5e;"></i>
+          <span>Expense</span>
+        </label>
+        <label class="type-radio-label income {% if form_data and form_data.get('type') == 'income' %}active{% endif %}">
+          <input type="radio" name="type" value="income" {% if form_data and form_data.get('type') == 'income' %}checked{% endif %}>
+          <i data-lucide="arrow-up-right" style="color: #10b981;"></i>
+          <span>Income</span>
+        </label>
+      </div>
+
+      <!-- Amount -->
+      <div class="form-group">
+        <label class="form-label" for="amount">Amount ({{ current_user.currency_symbol }})</label>
+        <input type="number" step="0.01" min="0.01" class="form-control" id="amount" name="amount" value="{{ form_data.amount if form_data else '' }}" placeholder="0.00" required autofocus>
+      </div>
+
+      <!-- Category -->
+      <div class="form-group">
+        <label class="form-label" for="transactionCategory">Category</label>
+        <select class="form-select" id="transactionCategory" name="category" required>
+          <option value="" disabled selected>Select category...</option>
+          {% if form_data and form_data.get('type') == 'income' %}
+            {% for cat in income_categories %}
+              <option value="{{ cat }}" {% if form_data.category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          {% else %}
+            {% for cat in expense_categories %}
+              <option value="{{ cat }}" {% if form_data and form_data.category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          {% endif %}
+        </select>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label" for="description">Description</label>
+        <input type="text" class="form-control" id="description" name="description" value="{{ form_data.description if form_data else '' }}" placeholder="e.g. Monthly Rent, Grocery Store, Freelance Gig" required maxlength="200">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
+        <!-- Date -->
+        <div class="form-group">
+          <label class="form-label" for="date">Date</label>
+          <input type="date" class="form-control" id="date" name="date" value="{{ (form_data.date if form_data else default_date) }}" required>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="form-group">
+          <label class="form-label" for="paymentMethod">Payment Method</label>
+          <select class="form-select" id="paymentMethod" name="payment_method">
+            {% for pm in payment_methods %}
+              <option value="{{ pm }}" {% if form_data and form_data.payment_method == pm %}selected{% endif %}>{{ pm }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group">
+        <label class="form-label" for="notes">Notes (Optional)</label>
+        <textarea class="form-control" id="notes" name="notes" placeholder="Add any additional remarks or invoice numbers...">{{ form_data.notes if form_data else '' }}</textarea>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <a href="{{ url_for('transactions.index') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="check"></i>
+          <span>Save Transaction</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/transactions.js') }}"></script>
+{% endblock %}

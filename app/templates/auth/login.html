@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Smart Expense Tracker</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/logo.svg') }}">
+</head>
+<body>
+
+  <!-- Flash Messages / Toasts -->
+  <div class="toast-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="toast toast-{{ category }}">
+            <span>{{ message }}</span>
+            <button class="toast-close" type="button">&times;</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" class="auth-logo">
+        <h1 class="auth-title">Welcome Back</h1>
+        <p class="auth-subtitle">Sign in to your Smart Expense Tracker account</p>
+      </div>
+
+      <form class="auth-form" method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}">
+        <div class="form-group">
+          <label class="form-label" for="identifier">Username or Email</label>
+          <input type="text" class="form-control" id="identifier" name="identifier" value="{{ identifier or '' }}" placeholder="Enter username or email" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+        </div>
+
+        <div class="auth-remember">
+          <label class="custom-checkbox">
+            <input type="checkbox" name="remember" value="1" checked>
+            <span>Remember me</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">
+          <i data-lucide="log-in"></i>
+          <span>Sign In</span>
+        </button>
+      </form>
+
+      <div class="auth-footer-link">
+        Don't have an account? <a href="{{ url_for('auth.register') }}">Create one here</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
