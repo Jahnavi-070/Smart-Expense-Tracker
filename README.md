@@ -24,7 +24,7 @@ Designed with a clean, portfolio-ready dark-glass UI, the application allows use
   - Recent activity feed with category badges and icons.
 
 - **🤖 Smart Financial Insights Engine**:
-  - Automated rule-based financial analysis that evaluates spending velocity, top expense categories, savings rate, month-over-month (MoM) changes, and budget burn rates.
+  - Rule-based financial analysis that evaluates spending patterns, budget usage, savings rate, month-over-month (MoM) changes, and spending velocity.
   - Actionable recommendation alerts (Safe, Warning, Critical, Over-Budget).
 
 - **💸 Transaction Management (Full CRUD)**:
