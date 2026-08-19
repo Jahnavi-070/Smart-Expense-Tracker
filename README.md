@@ -189,7 +189,7 @@ Follow these steps to set up and run Smart Expense Tracker locally:
 
 ### 2. Clone the Repository
 ```bash
-git clone https://github.com/your-username/smart-expense-tracker.git
+git clone https://github.com/Jahnavi-070/smart-expense-tracker.git
 cd smart-expense-tracker
 ```
 
@@ -224,12 +224,14 @@ Open your browser and navigate to: **`http://127.0.0.1:5000/`**
 
 ---
 
-## 👤 Demo Login Credentials
+## 👤 Demo Account
 
 If you ran `python seed.py`, you can log in immediately with:
 
 - **Email:** `demo@example.com` (or username: `alex_finance`)
 - **Password:** `password123`
+  
+These credentials are for demonstration purposes only.
 
 You can also click **Create an Account** to register a fresh user.
 
@@ -263,19 +265,6 @@ Tests cover:
 | `GET` | `/api/summary` | Live summary metrics (Income, Expenses, Net Balance) |
 
 ---
-
-## 📤 Uploading to GitHub
-
-To push this project to your GitHub account:
-
-```bash
-git init
-git add .
-git commit -m "Initial commit: Smart Expense Tracker full-stack application"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/SmartExpenseTracker.git
-git push -u origin main
-```
 
 ---
 
