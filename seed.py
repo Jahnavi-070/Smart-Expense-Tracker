@@ -3,9 +3,9 @@ from datetime import date, timedelta
 from app import create_app
 from app.models import db, User, Transaction, Budget
 
-app = create_app()
 
 def seed_database():
+    app = create_app()
     """Populates the database with a rich demo user dataset for portfolio presentation."""
     with app.app_context():
         # Ensure tables exist
