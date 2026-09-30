@@ -1,6 +1,13 @@
 # 💰 Smart Expense Tracker
 
-A modern, full-stack personal finance and expense tracking web application built with **Python (Flask)**, **SQLite**, **HTML5/CSS3/JavaScript**, and **Chart.js**.
+A modern, full-stack personal finance and expense tracking web application built with **Python (Flask)**, **SQLite / PostgreSQL**, **HTML5/CSS3/JavaScript**, and **Chart.js**.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://smartexpensetracker-1.vercel.app/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-green.svg)](https://www.python.org/)
+[![Flask 3.0+](https://img.shields.io/badge/Flask-3.0%2B-lightgrey.svg)](https://flask.palletsprojects.com/)
+
+🔗 **Live Demo:** [https://smartexpensetracker-1.vercel.app/](https://smartexpensetracker-1.vercel.app/)
 
 Designed with a clean, portfolio-ready dark-glass UI, the application allows users to manage income and expenses, set monthly budgets with threshold alerts, visualize cashflow trends with interactive charts, and receive AI-driven financial insights.
 
@@ -136,9 +143,13 @@ SmartExpenseTracker/
 │   ├── __init__.py
 │   └── test_app.py               # Automated unit & integration tests
 │
+├── api/
+│   └── index.py                  # Vercel serverless function entrypoint
+│
 ├── instance/                     # SQLite database directory (auto-created)
 ├── seed.py                       # Demo dataset generator (multi-month transactions & budgets)
-├── run.py                        # Application entry point
+├── run.py                        # Local application entry point
+├── vercel.json                   # Vercel deployment and WSGI routing configuration
 ├── requirements.txt              # Project Python dependencies
 ├── .gitignore                    # Python, SQLite, environment & cache ignore rules
 └── README.md                     # Project documentation
@@ -234,6 +245,21 @@ If you ran `python seed.py`, you can log in immediately with:
 These credentials are for demonstration purposes only.
 
 You can also click **Create an Account** to register a fresh user.
+
+---
+
+## ☁️ Deploy to Vercel
+
+This repository is pre-configured for one-click deployment on **Vercel**:
+
+1. Push your repository to GitHub.
+2. Go to [Vercel Dashboard](https://vercel.com/new) and **Import** your repository.
+3. Keep default settings (Vercel automatically detects `requirements.txt` and `vercel.json`).
+4. (Optional) For persistent production data, add a PostgreSQL connection string to Environment Variables:
+   ```env
+   DATABASE_URL=postgresql://user:password@host/dbname?sslmode=require
+   ```
+5. Click **Deploy**.
 
 ---
 
