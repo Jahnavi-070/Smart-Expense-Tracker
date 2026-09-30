@@ -1,8 +1,16 @@
+import os
+import sys
 from datetime import date
 from calendar import monthrange
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import func, extract
+
+# Ensure project root is in sys.path if run directly
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
+
 from app.models import db, Budget, Transaction
 from app.config import Config
 

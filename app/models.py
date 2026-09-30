@@ -1,9 +1,13 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
+
+
+def utcnow():
+    return datetime.now(timezone.utc)
 
 
 class User(UserMixin, db.Model):
@@ -15,11 +19,22 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
     currency = db.Column(db.String(10), default='USD', nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     # Relationships
     transactions = db.relationship('Transaction', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     budgets = db.relationship('Budget', backref='user', lazy='dynamic', cascade='all, delete-orphan')
+
+    def __init__(self, username=None, email=None, password_hash=None, currency='USD', **kwargs):
+        super().__init__(**kwargs)
+        if username is not None:
+            self.username = username
+        if email is not None:
+            self.email = email
+        if password_hash is not None:
+            self.password_hash = password_hash
+        if currency is not None:
+            self.currency = currency
 
     def set_password(self, password):
         """Hashes and stores the user password."""
@@ -62,8 +77,27 @@ class Transaction(db.Model):
     date = db.Column(db.Date, nullable=False, default=date.today, index=True)
     payment_method = db.Column(db.String(50), default='Cash')
     notes = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    def __init__(self, user_id=None, type=None, amount=None, category=None, description=None, date=None, payment_method='Cash', notes=None, **kwargs):
+        super().__init__(**kwargs)
+        if user_id is not None:
+            self.user_id = user_id
+        if type is not None:
+            self.type = type
+        if amount is not None:
+            self.amount = amount
+        if category is not None:
+            self.category = category
+        if description is not None:
+            self.description = description
+        if date is not None:
+            self.date = date
+        if payment_method is not None:
+            self.payment_method = payment_method
+        if notes is not None:
+            self.notes = notes
 
     def to_dict(self):
         return {
@@ -93,13 +127,26 @@ class Budget(db.Model):
     year = db.Column(db.Integer, nullable=False)   # e.g., 2026
     amount = db.Column(db.Float, nullable=False)
     category = db.Column(db.String(50), nullable=True)  # None = Overall monthly budget, or category name
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
     # Unique constraint: only one budget per user, year, month, category (category can be None)
     __table_args__ = (
         db.UniqueConstraint('user_id', 'year', 'month', 'category', name='unique_user_budget_per_month_cat'),
     )
+
+    def __init__(self, user_id=None, month=None, year=None, amount=None, category=None, **kwargs):
+        super().__init__(**kwargs)
+        if user_id is not None:
+            self.user_id = user_id
+        if month is not None:
+            self.month = month
+        if year is not None:
+            self.year = year
+        if amount is not None:
+            self.amount = amount
+        if category is not None:
+            self.category = category
 
     def to_dict(self):
         return {

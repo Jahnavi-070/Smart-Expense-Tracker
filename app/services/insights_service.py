@@ -200,7 +200,7 @@ class FinancialInsightsService:
         current_year = today.year
 
         from app.models import User
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         sym = user.currency_symbol if user else '$'
 
         insights = []

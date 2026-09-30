@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import Flask, render_template
 from flask_login import LoginManager
 from app.config import Config
@@ -27,7 +27,7 @@ def create_app(config_class=Config):
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
 
     # Register blueprints
     from app.routes.auth import auth_bp
@@ -48,7 +48,7 @@ def create_app(config_class=Config):
     @app.context_processor
     def inject_global_vars():
         return {
-            'now': datetime.utcnow(),
+            'now': datetime.now(timezone.utc),
             'expense_categories': Config.EXPENSE_CATEGORIES,
             'income_categories': Config.INCOME_CATEGORIES,
             'payment_methods': Config.PAYMENT_METHODS,
@@ -64,8 +64,21 @@ def create_app(config_class=Config):
     def internal_server_error(e):
         return render_template('errors/500.html'), 500
 
-    # Auto-create tables in development
+    # Auto-create tables in development / serverless
     with app.app_context():
         db.create_all()
+        if os.environ.get("VERCEL"):
+            try:
+                if not User.query.filter_by(email="demo@example.com").first():
+                    demo_user = User(
+                        username="alex_finance",
+                        email="demo@example.com",
+                        currency="USD"
+                    )
+                    demo_user.set_password("password123")
+                    db.session.add(demo_user)
+                    db.session.commit()
+            except Exception:
+                db.session.rollback()
 
     return app

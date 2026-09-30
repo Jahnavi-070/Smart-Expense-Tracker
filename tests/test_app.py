@@ -124,7 +124,7 @@ class SmartExpenseTrackerTestCase(unittest.TestCase):
         }, follow_redirects=True)
 
         self.assertEqual(res.status_code, 200)
-        updated = Transaction.query.get(t.id)
+        updated = db.session.get(Transaction, t.id)
         self.assertEqual(updated.amount, 120.00)
         self.assertEqual(updated.description, 'Updated Shoes with Tax')
 
@@ -144,7 +144,7 @@ class SmartExpenseTrackerTestCase(unittest.TestCase):
 
         res = self.client.post(f'/transactions/{t.id}/delete', follow_redirects=True)
         self.assertEqual(res.status_code, 200)
-        self.assertIsNone(Transaction.query.get(t.id))
+        self.assertIsNone(db.session.get(Transaction, t.id))
 
     def test_export_csv(self):
         """Test transactions CSV export."""

@@ -1,6 +1,14 @@
+import os
+import sys
 from datetime import date
 from flask import Blueprint, render_template, redirect, url_for
 from flask_login import login_required, current_user
+
+# Ensure project root is in sys.path if run directly
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
+
 from app.models import Transaction, Budget
 from app.services.insights_service import FinancialInsightsService
 
@@ -52,3 +60,10 @@ def index():
         budgets=budgets,
         today=today
     )
+
+
+if __name__ == '__main__':
+    from run import app
+    print("\n[+] Starting Flask application via dashboard.py entry...")
+    app.run(debug=True)
+
