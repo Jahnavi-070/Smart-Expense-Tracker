@@ -10,7 +10,8 @@ login_manager = LoginManager()
 
 def create_app(config_class=Config):
     """Application factory for Smart Expense Tracker."""
-    app = Flask(__name__, instance_relative_config=True)
+    instance_path = "/tmp/instance" if os.environ.get("VERCEL") else os.path.join(os.path.dirname(os.path.dirname(__file__)), "instance")
+    app = Flask(__name__, instance_relative_config=True, instance_path=instance_path)
     app.config.from_object(config_class)
 
     # Ensure the instance directory exists for SQLite
